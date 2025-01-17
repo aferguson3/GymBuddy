@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-
 )
 
-var StandardWeights_ = StandardWeights{}
+var standardWeights = StandardWeights{}
 
 var (
 	buf bytes.Buffer
@@ -22,13 +21,22 @@ func ReportErrors(x bool) {
 }
 
 func main(){
-	StandardWeights_.init()
+	standardWeights.init()
 	homeGym := HomeGym{
 		FreedomUnits: true,
-		Plates: PurchasedPlates{make(map[string]byte), make(map[string]byte)},
+		PlateCounter: PurchasedPlates{make(map[float32]byte), make(map[float32]byte)},
+		BarWeight: 45,
 	}
+	numPlates := 10
+	homeGym.BuyPlates(2.5, byte(numPlates))
+	homeGym.BuyPlates(5, byte(numPlates))
+	homeGym.BuyPlates(45, 2)
+	homeGym.BuyPlates(35, byte(numPlates))
+	homeGym.BuyPlates(10, byte(numPlates))
+	homeGym.BuyPlates(25, byte(numPlates))
 
 	logger.Println(homeGym)
+	
 	ReportErrors(true)
 }
 
