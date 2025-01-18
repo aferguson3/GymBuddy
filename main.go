@@ -6,11 +6,11 @@ import (
 	"log"
 )
 
-var standardWeights = StandardWeights{}
+var standardWeights = StandardPlateWeights{}
 
 var (
-	buf bytes.Buffer
-	logger = log.New(&buf, "",log.Lshortfile | log.Ltime)
+	buf    bytes.Buffer
+	logger = log.New(&buf, "", log.Lshortfile|log.Ltime)
 )
 
 func ReportErrors(x bool) {
@@ -20,12 +20,12 @@ func ReportErrors(x bool) {
 	}
 }
 
-func main(){
+func main() {
 	standardWeights.init()
 	homeGym := HomeGym{
-		FreedomUnits: true,
-		PlateCounter: PurchasedPlates{make(map[float32]byte), make(map[float32]byte)},
-		BarWeight: 45,
+		FreedomUnits:   true,
+		PlateInventory: PlateInventory{make(map[float32]byte), make(map[float32]byte)},
+		BarWeight:      45,
 	}
 	numPlates := 10
 	homeGym.BuyPlates(2.5, byte(numPlates))
@@ -36,7 +36,6 @@ func main(){
 	homeGym.BuyPlates(25, byte(numPlates))
 
 	logger.Println(homeGym)
-	
+
 	ReportErrors(true)
 }
-

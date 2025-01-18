@@ -1,17 +1,43 @@
 package main
 
-type PlateCount = map[float32]byte
+import "slices"
 
-type PurchasedPlates struct {
-	lbs PlateCount
-	kgs PlateCount
+type PlateSet = map[float32]byte
+
+func getKeys[V comparable](p map[float32]V) (keys []float32) {
+	keys = make([]float32, 0, len(p))
+	for key := range p {
+		keys = append(keys, key)
+	}
+
+	return keys
 }
-type StandardWeights struct {
+
+func getValues[V any](p map[float32]V, keys []float32) (values []V) {
+	values = make([]V, 0, len(p))
+	for i := 0; i < len(keys); i++ {
+		value := p[keys[i]]
+		values = append(values, value)
+	}
+	return values
+}
+func sortByKeys[V any](p map[float32]V) (keys []float32, values []V) {
+	keys, values = make([]float32, 0, len(p)), make([]V, 0, len(p))
+	slices.Sort(keys) ;slices.Reverse(keys)
+	
+}
+
+type PlateInventory struct {
+	lbs PlateSet
+	kgs PlateSet
+}
+
+type StandardPlateWeights struct {
 	lbs map[float32]bool
 	kgs map[float32]bool
 }
 
-func (s *StandardWeights) init() {
+func (s *StandardPlateWeights) init() {
 	s.lbs = map[float32]bool{
 		2.5: true,
 		5:   true,
@@ -32,10 +58,10 @@ func (s *StandardWeights) init() {
 }
 
 type HomeGym struct {
-	FreedomUnits bool
-	PlateCounter PurchasedPlates
-	MaxWeight    float32
-	BarWeight    float32
+	FreedomUnits   bool
+	PlateInventory PlateInventory
+	MaxWeight      float32
+	BarWeight      float32
 	//weight combos: hasmap of all possible weight combinations, ranked by # of weights
 
 }
@@ -43,7 +69,7 @@ type HomeGym struct {
 type TestHomeGym = HomeGym
 
 func (h *TestHomeGym) init() {
-	h.PlateCounter.lbs = map[float32]byte{
+	h.PlateInventory.lbs = map[float32]byte{
 		2.5: 0,
 		5:   0,
 		10:  0,
@@ -51,7 +77,7 @@ func (h *TestHomeGym) init() {
 		35:  0,
 		45:  0,
 	}
-	h.PlateCounter.kgs = map[float32]byte{
+	h.PlateInventory.kgs = map[float32]byte{
 		1.25: 0,
 		2.5:  0,
 		5:    0,

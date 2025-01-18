@@ -8,8 +8,8 @@ import (
 
 func testSetup() TestHomeGym {
 	var homeGym = HomeGym{
-		FreedomUnits: true,
-		PlateCounter: PurchasedPlates{},
+		FreedomUnits:   true,
+		PlateInventory: PlateInventory{},
 	}
 	homeGym.init()
 	standardWeights.init()
@@ -31,7 +31,7 @@ func TestBuyPlateValidWeights(t *testing.T) {
 
 	for plate := range lbsPlates {
 		homeGym.BuyPlates(plate, 7)
-		got := homeGym.PlateCounter.lbs[plate]
+		got := homeGym.PlateInventory.lbs[plate]
 		want := byte(7)
 
 		if got != want {
@@ -43,7 +43,7 @@ func TestBuyPlateValidWeights(t *testing.T) {
 	homeGym.FreedomUnits = false
 	for plate := range kgsPlates {
 		homeGym.BuyPlates(plate, 12)
-		got := homeGym.PlateCounter.kgs[plate]
+		got := homeGym.PlateInventory.kgs[plate]
 		want := byte(12)
 
 		if got != want {
@@ -61,7 +61,7 @@ func TestBuyPlateInvalidWeights(t *testing.T) {
 		plate := plates_1[i]
 		homeGym.FreedomUnits = true
 		homeGym.BuyPlates(plate, 1)
-		got := homeGym.PlateCounter.lbs[plate]
+		got := homeGym.PlateInventory.lbs[plate]
 		want := byte(0)
 
 		if got != want {
@@ -73,7 +73,7 @@ func TestBuyPlateInvalidWeights(t *testing.T) {
 		plate := plates_1[i]
 		homeGym.FreedomUnits = false
 		homeGym.BuyPlates(plate, 1)
-		got := homeGym.PlateCounter.kgs[plate]
+		got := homeGym.PlateInventory.kgs[plate]
 		want := byte(0)
 
 		if got != want {
@@ -89,17 +89,17 @@ func TestSellPlateValidWeights(t *testing.T) {
 	var kgsPlates = maps.Keys(standardWeights.kgs)
 	var numPlates = byte(6)
 
-	for key := range maps.Keys(homeGym.PlateCounter.lbs) {
-		homeGym.PlateCounter.lbs[key] = numPlates
+	for key := range maps.Keys(homeGym.PlateInventory.lbs) {
+		homeGym.PlateInventory.lbs[key] = numPlates
 
 	}
-	for key := range maps.Keys(homeGym.PlateCounter.kgs) {
-		homeGym.PlateCounter.kgs[key] = numPlates
+	for key := range maps.Keys(homeGym.PlateInventory.kgs) {
+		homeGym.PlateInventory.kgs[key] = numPlates
 	}
 
 	for plate := range lbsPlates {
 		err := homeGym.SellPlates(plate, 1)
-		got := homeGym.PlateCounter.lbs[plate]
+		got := homeGym.PlateInventory.lbs[plate]
 		want := numPlates - 1
 
 		if err != nil {
@@ -115,7 +115,7 @@ func TestSellPlateValidWeights(t *testing.T) {
 	homeGym.FreedomUnits = false
 	for plate := range kgsPlates {
 		homeGym.SellPlates(plate, 1)
-		got := homeGym.PlateCounter.kgs[plate]
+		got := homeGym.PlateInventory.kgs[plate]
 		want := numPlates - 1
 
 		if got != want {
@@ -133,7 +133,7 @@ func TestSellPlateInvalidWeights(t *testing.T) {
 		plate := plates_1[i]
 		homeGym.FreedomUnits = true
 		homeGym.SellPlates(plate, 1)
-		got := homeGym.PlateCounter.lbs[plate]
+		got := homeGym.PlateInventory.lbs[plate]
 		want := byte(0)
 
 		if got != want {
@@ -145,7 +145,7 @@ func TestSellPlateInvalidWeights(t *testing.T) {
 		plate := plates_1[i]
 		homeGym.FreedomUnits = false
 		homeGym.SellPlates(plate, 1)
-		got := homeGym.PlateCounter.kgs[plate]
+		got := homeGym.PlateInventory.kgs[plate]
 		want := byte(0)
 
 		if got != want {
@@ -161,12 +161,12 @@ func TestSellPlateInvalidAmount(t *testing.T) {
 	var kgsPlates = maps.Keys(standardWeights.kgs)
 	var numPlates = byte(6)
 
-	for key := range maps.Keys(homeGym.PlateCounter.lbs) {
-		homeGym.PlateCounter.lbs[key] = numPlates
+	for key := range maps.Keys(homeGym.PlateInventory.lbs) {
+		homeGym.PlateInventory.lbs[key] = numPlates
 
 	}
-	for key := range maps.Keys(homeGym.PlateCounter.kgs) {
-		homeGym.PlateCounter.kgs[key] = numPlates
+	for key := range maps.Keys(homeGym.PlateInventory.kgs) {
+		homeGym.PlateInventory.kgs[key] = numPlates
 	}
 
 	homeGym.FreedomUnits = true
@@ -234,9 +234,9 @@ func TestCombos(t *testing.T) {
 	plates_kgs := map[float32]byte{45: numPlates, 35: numPlates, 25: numPlates, 10: numPlates, 5: numPlates, 2.5: numPlates}
 
 	homeGym = TestHomeGym{
-		BarWeight:    45,
-		FreedomUnits: true,
-		PlateCounter: PurchasedPlates{(plates_lbs), (plates_kgs)},
+		BarWeight:      45,
+		FreedomUnits:   true,
+		PlateInventory: PlateInventory{(plates_lbs), (plates_kgs)},
 	}
 
 	want := [][]float32{
@@ -256,17 +256,17 @@ func TestCombos(t *testing.T) {
 	for i := 0; i < len(want); i++ {
 		switch i {
 		case 0:
-			combo, err = homeGym.GetCombo(homeGym.PlateCounter.lbs, 225)
+			combo, err = homeGym.GetCombo(homeGym.PlateInventory.lbs, 225)
 		case 1:
-			combo, err = homeGym.GetCombo(homeGym.PlateCounter.lbs, 185)
+			combo, err = homeGym.GetCombo(homeGym.PlateInventory.lbs, 185)
 		case 2:
-			combo, err = homeGym.GetCombo(homeGym.PlateCounter.lbs, 135)
+			combo, err = homeGym.GetCombo(homeGym.PlateInventory.lbs, 135)
 		case 3:
-			combo, err = homeGym.GetCombo(homeGym.PlateCounter.lbs, 0)
+			combo, err = homeGym.GetCombo(homeGym.PlateInventory.lbs, 0)
 		case 4:
-			combo, err = homeGym.GetCombo(homeGym.PlateCounter.lbs, -100)
+			combo, err = homeGym.GetCombo(homeGym.PlateInventory.lbs, -100)
 		case 5:
-			combo, err = homeGym.GetCombo(homeGym.PlateCounter.lbs, homeGym.BarWeight)
+			combo, err = homeGym.GetCombo(homeGym.PlateInventory.lbs, homeGym.BarWeight)
 		}
 		if slices.Contains(expected_errors, byte(i)) {
 			t.Logf("expected error: %v", err)

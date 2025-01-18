@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"maps"
 	"slices"
+	"sort"
 	"strconv"
 )
-
 
 func ToFloatKeys[V any](oldMap map[string]V) (newMap map[float32]V, err error) {
 	newMap = make(map[float32]V)
@@ -30,12 +30,12 @@ func ToStringKeys[V any](oldMap map[float32]V) (newMap map[string]V) {
 	return newMap
 
 }
-func getPlates(h *HomeGym) (ownedPlates *PlateCount, standardPlates *map[float32]bool) {
+func getPlates(h *HomeGym) (plateSet *PlateSet, standardPlates *map[float32]bool) {
 	if h.FreedomUnits {
-		ownedPlates = &h.PlateCounter.lbs
+		plateSet = &h.PlateInventory.lbs
 		standardPlates = &standardWeights.lbs
 	} else {
-		ownedPlates = &h.PlateCounter.kgs
+		plateSet = &h.PlateInventory.kgs
 		standardPlates = &standardWeights.kgs
 	}
 	return
@@ -55,17 +55,17 @@ func (h *HomeGym) BuyPlates(plate float32, amount byte) (err error) {
 }
 
 func (h *HomeGym) SellPlates(plate float32, amount byte) (err error) {
-	ownedPlates, standardPlates := getPlates(h)
+	plateSet, standardPlates := getPlates(h)
 
 	if _, ok := (*standardPlates)[plate]; ok {
-		result := int((*ownedPlates)[plate]) - int(amount)
+		result := int((*plateSet)[plate]) - int(amount)
 		if result < 0 {
-			err = fmt.Errorf("HomeGym.FreedomUnits:%v %v:%v has < %v plates", h.FreedomUnits, plate, (*ownedPlates)[plate], amount)
+			err = fmt.Errorf("HomeGym.FreedomUnits:%v %v:%v has < %v plates", h.FreedomUnits, plate, (*plateSet)[plate], amount)
 			return
 		}
 
-		if (*ownedPlates)[plate] > 0 {
-			(*ownedPlates)[plate] = (*ownedPlates)[plate] - amount
+		if (*plateSet)[plate] > 0 {
+			(*plateSet)[plate] = (*plateSet)[plate] - amount
 
 		} else {
 			logger.Printf("No %v plates to remove", plate)
@@ -91,51 +91,39 @@ func (h *HomeGym) CalculateMaxWeight() (err error) {
 }
 
 func (h *HomeGym) WeightCombos() {
-	/*
-		Known: purchased plates
-		Want: weight(s) to achieve, minimal plates used, even on both sides
-		Weight : [bar weight] + [weight plates used]
-		225: 45(bar) 45 45 35 35 10 10
-// 	*/
 	// combos := map[float32][]float32
 	// currCombo := []float32
-	// var plateCounter = PlateCount
+	inventory, _ := getPlates(h)
+	inventoryKeys := getKeys(inventory)
+	// inventoryValues := getValues(inventory, inventoryKeys)
 
-	// if h.FreedomUnits {
-	// 	plateCounter = h.Plates.lbs
-	// } else {
-	// 	plateCounter = h.Plates.kgs
-	// }
+	// 	//recursively find all possible weight combos
+	// 	//if weight achieved, add to combos
 
-// 	//recursively find all possible weight combos
-// 	//if weight achieved, add to combos
-
-// 	//if not possible, return error
+	// //if not possible, return error
 }
 
-func (h *HomeGym) GetCombo(plates PlateCount, desiredWeight float32) (combo []float32, err error) {
+func (h *HomeGym) GetCombo(plateSet PlateSet, desiredWeight float32) (combo []float32, err error) {
 	targetWeight := desiredWeight - h.BarWeight
 	if desiredWeight < h.BarWeight {
 		err = fmt.Errorf("desired weight %v is less than bar weight %v", desiredWeight, h.BarWeight)
 		return nil, err
 	}
 
-	plateCounterKeys := make([]float32, 0, len(plates))
-	for key := range plates {
-		plateCounterKeys = append(plateCounterKeys, key)
-	}
-	slices.Sort(plateCounterKeys)
-	slices.Reverse(plateCounterKeys)
+	weightPlates := getKeys(plateSet)
+	slices.Sort(weightPlates)
+	slices.Reverse(weightPlates)
+
 	var result float32
 
-	for index := 0; index < len(plateCounterKeys); {
-		currWeight := plateCounterKeys[index]
+	for index := 0; index < len(weightPlates); {
+		currWeight := weightPlates[index]
 		result = targetWeight - 2*float32(currWeight)
 
-		if result >= 0 && plates[currWeight] >= 2 {
+		if result >= 0 && plateSet[currWeight] >= 2 {
 			targetWeight = result
 			combo = append(combo, float32(currWeight), float32(currWeight))
-			plates[currWeight] = plates[currWeight] - 2
+			plateSet[currWeight] = plateSet[currWeight] - 2
 			logger.Println(index, result)
 		} else {
 			index++
